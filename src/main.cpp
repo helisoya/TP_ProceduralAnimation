@@ -1,6 +1,7 @@
 #include "viewer.h"
+#include "boidviewer.h"
 
 int main(int argc, char** argv) {
-	MyViewer v;
+	BoidViewer v;
 	return v.run();
 }
