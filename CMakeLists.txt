@@ -43,6 +43,7 @@ set(SOURCE_FILES
 	src/renderengine.cpp
 	src/renderapi.cpp
 	src/viewerbase.cpp
+	src/cloth.cpp
 	thirdparty/glad/glad.c
 	thirdparty/imgui/imgui.cpp
 	thirdparty/imgui/imgui_demo.cpp
@@ -63,7 +64,7 @@ set(INCLUDE_DIRECTORIES
 file(REAL_PATH "./src/shaders/" SHADER_FILES_ABS_PATH)
 add_compile_definitions(SHADER_PATH="${SHADER_FILES_ABS_PATH}/")
 
-add_executable (${PROJECT_NAME} ${SOURCE_FILES})
+add_executable (${PROJECT_NAME} ${SOURCE_FILES}   "src/cloth.h" "src/cloth.cpp")
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC _CRT_SECURE_NO_WARNINGS)
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRECTORIES})
