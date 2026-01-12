@@ -20,8 +20,8 @@ constexpr static glm::vec4 green = { 0.f, 1.f, 0.f, 1.f };
 constexpr static glm::vec4 red = { 1.f, 0.f, 0.f, 1.f };
 
 
-MyViewer::MyViewer() : Viewer(viewerName, 1280, 720){
-	backgroundColor.g = 1;
+MyViewer::MyViewer() : Viewer(viewerName, 1280, 720), cloth(glm::vec3(0, 1, 5))
+{
 }
 
 void MyViewer::init() {
@@ -113,6 +113,8 @@ void MyViewer::render3D(const RenderApi3D& api) const {
 	}
 
 	api.solidSphere(glm::vec3(-1.f, 0.5f, 1.f), 0.5f, 100, 100, white);
+
+	cloth.Render(api);
 }
 
 void MyViewer::render2D(const RenderApi2D& api) const {

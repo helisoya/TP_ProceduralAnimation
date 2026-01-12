@@ -1,4 +1,7 @@
 #include "viewerbase.h"
+#include "cloth.h"
+
+
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
@@ -20,6 +23,8 @@ struct MyViewer : Viewer {
 	bool altKeyPressed;
 	//--
 	VertexShaderAdditionalData additionalShaderData;
+
+	Cloth cloth;
 
 	MyViewer();
 
