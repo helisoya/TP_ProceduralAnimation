@@ -24,8 +24,6 @@ struct MyViewer : Viewer {
 	//--
 	VertexShaderAdditionalData additionalShaderData;
 
-	Cloth cloth;
-
 	MyViewer();
 
 	void init() override;

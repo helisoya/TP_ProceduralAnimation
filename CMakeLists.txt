@@ -52,7 +52,7 @@ set(SOURCE_FILES
 	thirdparty/imgui/imgui_widgets.cpp
 	thirdparty/imgui/imgui_impl_glfw.cpp
 	thirdparty/imgui/imgui_impl_opengl3.cpp
-)
+ "src/cloth_point.h" "src/cloth_point.cpp")
 
 set(INCLUDE_DIRECTORIES 
 	${INCLUDE_DIRECTORIES}
@@ -64,7 +64,7 @@ set(INCLUDE_DIRECTORIES
 file(REAL_PATH "./src/shaders/" SHADER_FILES_ABS_PATH)
 add_compile_definitions(SHADER_PATH="${SHADER_FILES_ABS_PATH}/")
 
-add_executable (${PROJECT_NAME} ${SOURCE_FILES}   "src/cloth.h" "src/cloth.cpp")
+add_executable (${PROJECT_NAME} ${SOURCE_FILES}   "src/cloth.h" "src/cloth.cpp"  "src/cloth_point.h" "src/cloth_point.cpp")
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC _CRT_SECURE_NO_WARNINGS)
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRECTORIES})
