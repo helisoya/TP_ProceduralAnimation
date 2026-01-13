@@ -20,6 +20,9 @@ struct Bone {
 struct Skeleton {
 public:
 	glm::vec4 boneColor = { 0.f, 0.f, 1.f, 1.f };
+	glm::vec4 ikTargetColor = { 1.f, 0.f, 0.f, 1.f };
+
+	glm::vec3 ikTarget = { 1,0,0 };
 
 private:
 	std::vector<Bone> bones;
@@ -34,4 +37,10 @@ public:
 	std::vector<Bone>& GetBones();
 	void AddBone();
 	void RemoveBone();
+
+	void FabrikIK();
+
+private:
+	
+	void FabrikIteration(glm::vec3 target);
 };

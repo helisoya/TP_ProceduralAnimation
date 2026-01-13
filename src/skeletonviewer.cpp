@@ -111,6 +111,7 @@ void SkeletonViewer::drawGUI() {
 
 	ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
 	ImGui::ColorEdit4("Bone color", (float*)&skeleton.boneColor, ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit4("IK Target color", (float*)&skeleton.ikTargetColor, ImGuiColorEditFlags_NoInputs);
 	ImGui::Separator();
 
 	if (ImGui::CollapsingHeader("Bones")) {
@@ -144,6 +145,16 @@ void SkeletonViewer::drawGUI() {
 			skeleton.RemoveBone();
 		}
 	}
+
+	if (ImGui::CollapsingHeader("IK")) {
+
+		ImGui::DragFloat3("Target Position", (float(&)[3])skeleton.ikTarget, 0.1f, -10.0f, 10.0f);
+
+		if (ImGui::Button("Fabrik IK")) {
+			skeleton.FabrikIK();
+		}
+	}
+
 
 
 	ImGui::Separator();
