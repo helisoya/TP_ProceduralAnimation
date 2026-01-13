@@ -140,6 +140,9 @@ Viewer::Viewer(char const* initialWindowName, int initialViewportWidth, int init
 
 	pCustomShaderData = nullptr;
 	CustomShaderDataSize = 0;
+
+	pSkinningShaderData = nullptr;
+	SkinningShaderDataSize = 0;
 }
 
 namespace {

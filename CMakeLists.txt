@@ -64,7 +64,7 @@ set(INCLUDE_DIRECTORIES
 file(REAL_PATH "./src/shaders/" SHADER_FILES_ABS_PATH)
 add_compile_definitions(SHADER_PATH="${SHADER_FILES_ABS_PATH}/")
 
-add_executable (${PROJECT_NAME} ${SOURCE_FILES}   "src/cloth.h" "src/cloth.cpp"  "src/cloth_point.h" "src/cloth_point.cpp")
+add_executable (${PROJECT_NAME} ${SOURCE_FILES} "src/ParticleSystem.h" "src/ParticleSystem.cpp" "src/boids.h" "src/boids.cpp" "src/boidentity.h" "src/boidviewer.h" "src/boidviewer.cpp" "src/cloth.h" "src/cloth.cpp" "src/particleViewer.cpp" "src/particleViewer.h" "src/Skeleton.cpp" "src/Skeleton.h" "src/skeletonviewer.h" "src/skeletonviewer.cpp" "src/cloth.h" "src/cloth.cpp"  "src/cloth_point.h" "src/cloth_point.cpp")
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC _CRT_SECURE_NO_WARNINGS)
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRECTORIES})
