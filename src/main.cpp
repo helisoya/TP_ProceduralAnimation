@@ -1,8 +1,9 @@
 #include "viewer.h"
 #include "boidviewer.h"
 #include "particleViewer.h"
+#include "skeletonviewer.h"
 
 int main(int argc, char** argv) {
-	BoidViewer v;
+	SkeletonViewer v;
 	return v.run();
 }
