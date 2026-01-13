@@ -82,14 +82,44 @@ void Skeleton::FabrikIteration(glm::vec3 target)
 		// cannot reach
 		for (int i = 0; i < bones.size()-1; i ++) {
 			distTmp = glm::distance(absolutePositions[i],target);
-			lambda = distanceToPrevious[i+1] / distTmp;
+			lambda = distanceToPrevious[i] / distTmp;
 
 			// 0.0f is lambdaT
-			absolutePositions[i + 1] = (1 - lambda) * absolutePositions[i] + 0.0f;
+			absolutePositions[i + 1] = (1 - lambda) * absolutePositions[i] + lambda * target;
 		}
 	}
 	else {
 		// can reach target
+		glm::vec3 rootStart = absolutePositions[0];
+		float accuracy = glm::distance2(*(--absolutePositions.end()), target);
+
+		float tolerance = 1;
+
+		while (accuracy > tolerance)
+		{
+			absolutePositions[absolutePositions.size() - 1] = target;
+			for (int loop = absolutePositions.size() - 2; loop >= 0; loop--)
+			{
+				distTmp = glm::distance(absolutePositions[loop+1], absolutePositions[loop]);
+				lambda = distanceToPrevious[loop] / distTmp;
+
+				// 0.0f is lambdaT
+				absolutePositions[loop + 1] = (1 - lambda) * absolutePositions[loop+1] + lambda * absolutePositions[loop];
+			}
+
+			absolutePositions[0] = rootStart;
+
+			for (int loop = 1; loop < absolutePositions.size(); loop++)
+			{
+				distTmp = glm::distance(absolutePositions[loop + 1], absolutePositions[loop]);
+				lambda = distanceToPrevious[loop] / distTmp;
+
+				// 0.0f is lambdaT
+				absolutePositions[loop + 1] = (1 - lambda) * absolutePositions[loop] + lambda * absolutePositions[loop + 1];
+			}
+
+			accuracy = glm::distance2(*(--absolutePositions.end()), target);
+		}
 	}
 
 	absolutePosition = { 0,0,0 };
@@ -97,7 +127,7 @@ void Skeleton::FabrikIteration(glm::vec3 target)
 	for (int i = 0; i < bones.size(); i++) {
 
 		bones[i].relativePosition = absolutePositions[i] - absolutePosition;
-		absolutePosition -= bones[i].relativePosition;
+		absolutePosition += bones[i].relativePosition;
 		bones[i].relativeRotation = absoluteRotation;
 	}
 }
