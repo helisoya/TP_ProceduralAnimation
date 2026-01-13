@@ -1,12 +1,15 @@
 #include "boids.h"
 
 #include "glm/vec4.hpp"
+#include "ParticleSystem.h"
 
 Boids::Boids(int amount)
 {
 	for (int i = 0; i < amount; i++) {
 		boids.push_back(BoidEntity());
-        boids[i].position += i*0.01f;
+        boids[i].position = glm::vec3(rand() % (int)(range*2) - range, 
+            rand() % (int)(range * 2) - range, 
+            rand() % (int)(range * 2) - range);
         boids[i].velocity = glm::vec3(rand() % 2 - 1, rand() % 2 - 1, rand() % 2 - 1);
 	}
 }
@@ -84,24 +87,24 @@ void Boids::Update(double elapsed_time)
         
         
         if (currentIter->position.x > range) {
-            currentIter->velocity.x -= turnFactor;
+            currentIter->position.x = -range;
         }
         else if (currentIter->position.x < -range) {
-            currentIter->velocity.x += turnFactor;
+            currentIter->position.x = range;
         }
 
         if (currentIter->position.y > range) {
-            currentIter->velocity.y -= turnFactor;
+            currentIter->position.y = -range;
         }
         else if (currentIter->position.y < -range) {
-            currentIter->velocity.y += turnFactor;
+            currentIter->position.y = range;
         }
 
         if (currentIter->position.z > range) {
-            currentIter->velocity.z -= turnFactor;
+            currentIter->position.z = -range;
         }
         else if (currentIter->position.z < -range) {
-            currentIter->velocity.z += turnFactor;
+            currentIter->position.z = range;
         }
         
         float speed = sqrt(currentIter->velocity.x * currentIter->velocity.x +
@@ -115,7 +118,7 @@ void Boids::Update(double elapsed_time)
             currentIter->velocity = currentIter->velocity / speed * maxSpeed;
         }
 
-        currentIter->position += currentIter->velocity;
+        currentIter->position += currentIter->velocity * (float)elapsed_time;
 
         currentIter++;
     }

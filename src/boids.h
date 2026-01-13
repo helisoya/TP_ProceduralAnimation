@@ -11,14 +11,13 @@
 
 struct Boids {
 public:
-	float turnFactor = 0.025f;
-	float minSpeed = 0.001f;
-	float maxSpeed = 0.05f;
+	float minSpeed = 1.0f;
+	float maxSpeed = 5.0f;
 	float centeringFactor = 0.1f;
 	float matchingFactor = 0.1f;
 	float avoidFactor = 0.5f;
-	float protectedRange = 0.05f;
-	float visualRange = 0.1f;
+	float protectedRange = 0.5f;
+	float visualRange = 1.5f;
 	float range = 5.0f;
 	glm::vec4 boidColor = { 0.f, 0.f, 1.f, 1.f };
 	glm::vec4 rangeColor = { 1.f, 0.f, 0.f, 1.f };

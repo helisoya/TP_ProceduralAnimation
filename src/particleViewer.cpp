@@ -1,4 +1,4 @@
-#include "boidViewer.h"
+#include "particleViewer.h"
 #include "drawbuffer.h"
 #include "renderapi.h"
 
@@ -13,18 +13,18 @@
 
 #define COUNTOF(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
 
-constexpr static char const* viewerName = "Boids";
+constexpr static char const* viewerName = "Particle System";
 constexpr static glm::vec4 white = { 1.f, 1.f, 1.f, 1.f };
 constexpr static glm::vec4 blue = { 0.f, 0.f, 1.f, 1.f };
 constexpr static glm::vec4 green = { 0.f, 1.f, 0.f, 1.f };
 constexpr static glm::vec4 red = { 1.f, 0.f, 0.f, 1.f };
 
 
-BoidViewer::BoidViewer() : Viewer(viewerName, 1280, 720), boids(100){
+ParticleViewer::ParticleViewer() : Viewer(viewerName, 1280, 720), ps() {
 	backgroundColor.g = 1;
 }
 
-void BoidViewer::init() {
+void ParticleViewer::init() {
 	mousePos = { 0.f, 0.f };
 	leftMouseButtonPressed = false;
 
@@ -32,7 +32,7 @@ void BoidViewer::init() {
 }
 
 
-void BoidViewer::update(double DeltaTime) {
+void ParticleViewer::update(double DeltaTime) {
 
 	leftMouseButtonPressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
@@ -44,35 +44,37 @@ void BoidViewer::update(double DeltaTime) {
 
 	mousePos = { float(mouseX), viewportHeight - float(mouseY) };
 
-	boids.Update(DeltaTime);
+	ps.Update(DeltaTime);
 }
 
-void BoidViewer::render3D_Custom(const RenderApi3D& api) const {
+void ParticleViewer::render3D_Custom(const RenderApi3D& api) const {
 	//Here goes your drawcalls affected by the custom vertex shader
 }
 
-void BoidViewer::render3D_Skinning(const RenderApi3D& api) const{
+void ParticleViewer::render3D_Skinning(const RenderApi3D& api) const {
 	//Here goes your drawcalls affected by the skinning vertex shader
 	//api.horizontalSkinnedCylinder({ 4, 2, 0 }, 4.f, 0.5f, 16, 50, glm::vec4(0.7f, 0.8f, 0.1f, 1.f), GetSkinningWeightCb, (void*)this);
 }
 
 
-void BoidViewer::render3D(const RenderApi3D& api) const {
-	boids.Draw(api);
+void ParticleViewer::render3D(const RenderApi3D& api) const {
+	ps.Draw(api);
 }
 
-void BoidViewer::render2D(const RenderApi2D& api) const {
-	
+void ParticleViewer::render2D(const RenderApi2D& api) const {
+
 	constexpr float padding = 50.f;
 
 	if (altKeyPressed) {
 		if (leftMouseButtonPressed) {
 			api.circleFill(mousePos, padding, 10, white);
-		} else {
+		}
+		else {
 			api.circleContour(mousePos, padding, 10, white);
 		}
-			
-	} else {
+
+	}
+	else {
 		const glm::vec2 min = mousePos + glm::vec2(padding, padding);
 		const glm::vec2 max = mousePos + glm::vec2(-padding, -padding);
 		if (leftMouseButtonPressed) {
@@ -102,30 +104,58 @@ void BoidViewer::render2D(const RenderApi2D& api) const {
 	}
 }
 
-void BoidViewer::drawGUI() {
+void ParticleViewer::drawGUI() {
 	static bool showDemoWindow = false;
 
 	ImGui::Begin("Boids");
 
 	ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
-	ImGui::ColorEdit4("Boid color", (float*)&boids.boidColor, ImGuiColorEditFlags_NoInputs);
-	ImGui::ColorEdit4("Cube color", (float*)&boids.rangeColor, ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit4("Particle color", (float*)&ps.particleColor, ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit4("Well color", (float*)&ps.wellColor, ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit4("Cube color", (float*)&ps.rangeColor, ImGuiColorEditFlags_NoInputs);
 	ImGui::Separator();
 
+	if (ImGui::CollapsingHeader("Wells")) {
+		ImGui::Text("Well count : %i", ps.GetWells().size());
 
-	ImGui::SliderFloat("Min Speed", &boids.minSpeed, 0.0001f, 10.0f);
-	ImGui::SliderFloat("Max Speed", &boids.maxSpeed, 0.0001f, 10.0f);
+		std::vector<Well>& wells = ps.GetWells();
+		auto itr = wells.begin();
+		int i = 0;
+		while (itr != wells.end()) {
+			ImGui::PushID(i);
+			if (ImGui::CollapsingHeader("Instance")) {
+				ImGui::SliderFloat3("Position", (float(&)[3])itr->position, -10.0f, 10.0f);
+				ImGui::SliderFloat("Size", &itr->size, 0.01f, 100.0f);
+			}
+			ImGui::PopID();
+			i++;
+			itr++;
+		}
+
+		if (ImGui::Button("Add Well")) {
+			ps.AddWell();
+		}
+		if (ImGui::Button("Remove Well")) {
+			ps.RemoveWell();
+		}
+	}
+
+	if (ImGui::CollapsingHeader("Particles")) {
+		ImGui::Text("Particle count : %i",ps.GetParticles().size());
+
+		if (ImGui::Button("Add Particle")) {
+			ps.AddParticle();
+		}
+		if (ImGui::Button("Remove Particle")) {
+			ps.RemoveParticle();
+		}
+	}
+
 	ImGui::Separator();
+	ImGui::SliderFloat("Bounds", &ps.range, 0.01f, 10.0f);
+	ImGui::SliderFloat("Min speed", &ps.minSpeed, 0.001f, 10.0f);
+	ImGui::SliderFloat("Max speed", &ps.maxSpeed, 0.001f, 10.0f);
 
-	ImGui::SliderFloat("Centering factor", &boids.centeringFactor, 0.01f, 1.0f);
-	ImGui::SliderFloat("Matching factor", &boids.matchingFactor, 0.01f, 1.0f);
-	ImGui::SliderFloat("Avoid factor", &boids.avoidFactor, 0.01f, 1.0f);
-	ImGui::Separator();
-
-	ImGui::SliderFloat("Protected Range", &boids.protectedRange, 0.01f, 10.0f);
-	ImGui::SliderFloat("Visual Range", &boids.visualRange, 0.01f, 10.0f);
-	ImGui::SliderFloat("Bounds", &boids.range, 0.01f, 10.0f);
-	
 	ImGui::Separator();
 	ImGui::Separator();
 	ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
@@ -143,7 +173,7 @@ void BoidViewer::drawGUI() {
 	}
 
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	
+
 	ImGui::End();
 
 	if (showDemoWindow) {
