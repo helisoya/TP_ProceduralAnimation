@@ -23,6 +23,7 @@ public:
 	glm::vec4 ikTargetColor = { 1.f, 0.f, 0.f, 1.f };
 
 	glm::vec3 ikTarget = { 1,0,0 };
+	float tolerance = 1;
 
 private:
 	std::vector<Bone> bones;

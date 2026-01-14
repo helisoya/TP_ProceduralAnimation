@@ -148,7 +148,12 @@ void SkeletonViewer::drawGUI() {
 
 	if (ImGui::CollapsingHeader("IK")) {
 
-		ImGui::DragFloat3("Target Position", (float(&)[3])skeleton.ikTarget, 0.1f, -10.0f, 10.0f);
+		if (ImGui::DragFloat3("Target Position", (float(&)[3])skeleton.ikTarget, 0.1f, -10.0f, 10.0f))
+		{
+			skeleton.FabrikIK();
+		}
+
+		ImGui::InputFloat("Accuracy", &skeleton.tolerance);
 
 		if (ImGui::Button("Fabrik IK")) {
 			skeleton.FabrikIK();
