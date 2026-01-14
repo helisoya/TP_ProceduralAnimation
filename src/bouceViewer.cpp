@@ -1,4 +1,4 @@
-#include "viewer.h"
+#include "bounceViewer.h"
 #include "drawbuffer.h"
 #include "renderapi.h"
 
@@ -20,24 +20,30 @@ constexpr static glm::vec4 green = { 0.f, 1.f, 0.f, 1.f };
 constexpr static glm::vec4 red = { 1.f, 0.f, 0.f, 1.f };
 
 
-MyViewer::MyViewer() : Viewer(viewerName, 1280, 720) {
+BounceViewer::BounceViewer() : Viewer(viewerName, 1280, 720) {
+	decaySpeed = 1.0f;
+	currentBounceIndex = 0;
+	strength = 1.1f;
+	distanceFactor = 1.0f;
 }
 
-void MyViewer::init() {
-	cubePosition = glm::vec3(1.f, 0.25f, -1.f);
-	jointPosition = glm::vec3(-1.f, 2.f, -1.f);
-	boneAngle = 0.f;
+void BounceViewer::init() {
 	mousePos = { 0.f, 0.f };
 	leftMouseButtonPressed = false;
 
 	altKeyPressed = false;
 
 	additionalShaderData.Pos = { 0., 0., 0., 0. };
+	backgroundColor = { 0, 1, 0, 1 };
+
+	for (int i = 0; i < MaxBounces; i++) {
+		additionalShaderData.bouncesData[i] = { strength, 0.0f, distanceFactor, 0.0f};
+		additionalShaderData.bouncesPosition[i] = { 0,0,0,0 };
+	}
 }
 
 
-void MyViewer::update(double DeltaTime) {
-	boneAngle += float(DeltaTime);
+void BounceViewer::update(double DeltaTime) {
 
 	leftMouseButtonPressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
@@ -50,82 +56,47 @@ void MyViewer::update(double DeltaTime) {
 	mousePos = { float(mouseX), viewportHeight - float(mouseY) };
 
 	pCustomShaderData = &additionalShaderData;
-	CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
+	CustomShaderDataSize = sizeof(VertexShaderAdditionalDataBounce);
 
 	static float Something = 0.5;
 	pSkinningShaderData = &Something;
 	SkinningShaderDataSize = sizeof(Something);
+
+	for (int i = 0; i < MaxBounces; i++) {
+		if (additionalShaderData.bouncesData[i].y > 0) {
+			additionalShaderData.bouncesData[i].y = glm::max(additionalShaderData.bouncesData[i].y - (float)DeltaTime * decaySpeed, 0.0f);
+		}
+	}
 }
 
-void MyViewer::render3D_Custom(const RenderApi3D& api) const {
+void BounceViewer::render3D_Custom(const RenderApi3D& api) const {
 	//Here goes your drawcalls affected by the custom vertex shader
-	api.horizontalPlane({ 0, 2, 0 }, { 4, 4 }, 500, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
+	api.horizontalPlane({ 0, 0, 0 }, { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
 }
 
-void GetSkinningWeightCb(void* pData, glm::vec3 const& VertexPos, glm::ivec4 & BoneIndices, glm::vec4 & BoneWeights) {
-	MyViewer const& Viewer = *(MyViewer const*)pData;
-	BoneIndices.x = (int)floor(VertexPos.z);
-	BoneWeights.x = fmodf(VertexPos.z, 1.f);
-	if (BoneWeights.x > 0.5f) {
-		BoneWeights.x = 1.f - BoneWeights.x;
-	}
-		 
-}
-
-void MyViewer::render3D_Skinning(const RenderApi3D& api) const{
+void BounceViewer::render3D_Skinning(const RenderApi3D& api) const {
 	//Here goes your drawcalls affected by the skinning vertex shader
-	api.horizontalSkinnedCylinder({ 4, 2, 0 }, 4.f, 0.5f, 16, 50, glm::vec4(0.7f, 0.8f, 0.1f, 1.f), GetSkinningWeightCb, (void*)this);
+	//api.horizontalSkinnedCylinder({ 4, 2, 0 }, 4.f, 0.5f, 16, 50, glm::vec4(0.7f, 0.8f, 0.1f, 1.f), GetSkinningWeightCb, (void*)this);
 }
 
 
-void MyViewer::render3D(const RenderApi3D& api) const {
-	api.horizontalPlane({ 0, 0, 0 }, { 10, 10 }, 1, glm::vec4(0.9f, 0.9f, 0.9f, 1.f));
-
-	api.grid(10.f, 10, glm::vec4(0.5f, 0.5f, 0.5f, 1.f), nullptr);
-
-	api.axisXYZ(nullptr);
-	
-	constexpr float cubeSize = 0.5f;
-	glm::mat4 cubeModelMatrix = glm::translate(glm::identity<glm::mat4>(), cubePosition);
-	api.solidCube(cubeSize, white, &cubeModelMatrix);
-
-	{
-		glm::vec3 vertices[] = {
-			{0.5f * cubeSize, 0.5f * cubeSize, 0.5f * cubeSize},
-			{0.f, cubeSize, 0.f},
-			{0.5f * cubeSize, 0.5f * cubeSize, -0.5f * cubeSize},
-			{0.f, cubeSize, 0.f},
-			{-0.5f * cubeSize, 0.5f * cubeSize, 0.5f * cubeSize},
-			{0.f, cubeSize, 0.f},
-			{-0.5f * cubeSize, 0.5f * cubeSize, -0.5f * cubeSize},
-			{0.f, cubeSize, 0.f},
-		};
-		api.lines(vertices, COUNTOF(vertices), white, &cubeModelMatrix);
-	}
-
-	{
-		glm::quat q = { 0,0,0,1 };//glm::angleAxis(boneAngle, glm::vec3(0.f, 1.f, 0.f));
-		glm::vec3 childRelPos = { 1.f, 1.f, 0.f };
-		api.bone(childRelPos, white, q, glm::vec3(0.f, 0.f, 0.f));
-		glm::vec3 childAbsPos = q * childRelPos;
-		api.solidSphere(childAbsPos, 0.05f, 10, 10, white);
-	}
-
-	api.solidSphere(glm::vec3(-1.f, 0.5f, 1.f), 0.5f, 100, 100, white);
+void BounceViewer::render3D(const RenderApi3D& api) const {
 }
 
-void MyViewer::render2D(const RenderApi2D& api) const {
-	
+void BounceViewer::render2D(const RenderApi2D& api) const {
+
 	constexpr float padding = 50.f;
 
 	if (altKeyPressed) {
 		if (leftMouseButtonPressed) {
 			api.circleFill(mousePos, padding, 10, white);
-		} else {
+		}
+		else {
 			api.circleContour(mousePos, padding, 10, white);
 		}
-			
-	} else {
+
+	}
+	else {
 		const glm::vec2 min = mousePos + glm::vec2(padding, padding);
 		const glm::vec2 max = mousePos + glm::vec2(-padding, -padding);
 		if (leftMouseButtonPressed) {
@@ -155,14 +126,33 @@ void MyViewer::render2D(const RenderApi2D& api) const {
 	}
 }
 
-void MyViewer::drawGUI() {
+void BounceViewer::drawGUI() {
 	static bool showDemoWindow = false;
 
 	ImGui::Begin("3D Sandbox");
 
-	ImGui::Checkbox("Show demo window", &showDemoWindow);
-
 	ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
+
+	ImGui::Separator();
+	ImGui::DragFloat4("Position", (float(&)[4])additionalShaderData.Pos, 0.1f, -10.f, 10.f);
+	ImGui::DragFloat("Strenth", &strength, 0.1f, 0.0f, 10.f);
+	ImGui::DragFloat("Distance factor", &distanceFactor, 0.1f,0.0f, 1.f);
+	ImGui::Separator();
+
+	ImGui::DragFloat("Decay speed", &decaySpeed, 0.1f, 0.0f, 1.f);
+	ImGui::Separator();
+
+	if (ImGui::Button("Random bounce")) {
+
+		additionalShaderData.bouncesData[currentBounceIndex].y = strength;
+		additionalShaderData.bouncesData[currentBounceIndex].y = 1.0f;
+		additionalShaderData.bouncesData[currentBounceIndex].z = distanceFactor;
+		additionalShaderData.bouncesPosition[currentBounceIndex] = glm::vec4(rand() % 4 - 2, 0, rand() % 4 - 2, 0);
+		currentBounceIndex = (currentBounceIndex + 1) % MaxBounces;
+			
+		//additionalShaderData.bounceData.y = 1.0f;
+		//additionalShaderData.bouncePosition = glm::vec4(rand() % 4 - 2, 0, rand() % 4 - 2, 0);
+	}
 
 	ImGui::SliderFloat("Point size", &pointSize, 0.1f, 10.f);
 	ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
@@ -173,17 +163,13 @@ void MyViewer::drawGUI() {
 	ImGui::SliderFloat("Ligh Specular", &specular, 0.f, 1.f);
 	ImGui::SliderFloat("Ligh Specular Pow", &specularPow, 1.f, 200.f);
 	ImGui::Separator();
-	ImGui::SliderFloat3("CustomShader_Pos", &additionalShaderData.Pos.x, -10.f, 10.f);
-	ImGui::Separator();
 	float fovDegrees = glm::degrees(camera.fov);
 	if (ImGui::SliderFloat("Camera field of fiew (degrees)", &fovDegrees, 15, 180)) {
 		camera.fov = glm::radians(fovDegrees);
 	}
 
-	ImGui::SliderFloat3("Cube Position", (float(&)[3])cubePosition, -1.f, 1.f);
-
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	
+
 	ImGui::End();
 
 	if (showDemoWindow) {

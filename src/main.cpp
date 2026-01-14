@@ -2,8 +2,9 @@
 #include "boidviewer.h"
 #include "particleViewer.h"
 #include "skeletonviewer.h"
+#include "bounceViewer.h"
 
 int main(int argc, char** argv) {
-	SkeletonViewer v;
+	BounceViewer v;
 	return v.run();
 }
